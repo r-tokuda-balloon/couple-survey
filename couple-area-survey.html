@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where Should We Live?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #07070f 0%, #0f0b1e 50%, #070d14 100%);
+    font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #app { width: 100%; max-width: 520px; }
+
+  .screen { display: none; animation: fu 0.45s ease forwards; }
+  .screen.active { display: block; }
+  @keyframes fu { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+  h1 { font-size: clamp(32px, 8vw, 50px); line-height: 1.1; margin-bottom: 14px; font-weight: 900; }
+  h2 { font-size: clamp(18px, 5vw, 26px); margin-bottom: 10px; font-weight: 900; }
+
+  .sub { color: rgba(255,255,255,0.38); font-size: 14px; line-height: 2; margin-bottom: 24px; }
+
+  .partner-badges { display: flex; gap: 10px; justify-content: center; margin-bottom: 26px; }
+  .badge-a { background: rgba(125,211,252,0.12); border: 1px solid rgba(125,211,252,0.3); border-radius: 20px; padding: 6px 16px; color: #7dd3fc; font-weight: 700; font-size: 13px; }
+  .badge-b { background: rgba(249,168,212,0.12); border: 1px solid rgba(249,168,212,0.3); border-radius: 20px; padding: 6px 16px; color: #f9a8d4; font-weight: 700; font-size: 13px; }
+
+  .btn { border: none; border-radius: 50px; color: white; cursor: pointer; padding: 14px 40px; font-size: 15px; font-weight: 700; font-family: inherit; transition: filter 0.18s, transform 0.18s; }
+  .btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+  .btn-b { background: linear-gradient(135deg, #ec4899, #f97316); box-shadow: 0 4px 20px rgba(236,72,153,0.3); }
+  .btn-ghost { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); }
+  .btn-danger { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .btn-center { display: block; margin: 0 auto; }
+
+  /* Quiz */
+  .quiz-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .current-badge { border-radius: 20px; padding: 5px 14px; font-weight: 700; font-size: 13px; }
+  .current-badge.a { background: rgba(125,211,252,0.12); border: 1px solid rgba(125,211,252,0.3); color: #7dd3fc; }
+  .current-badge.b { background: rgba(249,168,212,0.12); border: 1px solid rgba(249,168,212,0.3); color: #f9a8d4; }
+  .q-count { margin-left: auto; color: rgba(255,255,255,0.3); font-size: 12px; }
+
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 16px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+  .progress-fill.a { background: linear-gradient(90deg, #0ea5e9, #6366f1); }
+  .progress-fill.b { background: linear-gradient(90deg, #ec4899, #f97316); }
+
+  .q-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px 18px; margin-bottom: 14px; }
+  .q-emoji { font-size: 28px; margin-bottom: 8px; }
+  .q-text { font-size: clamp(14px, 3.8vw, 17px); font-weight: 700; line-height: 1.6; margin-bottom: 20px; }
+
+  .slider-wrap { padding: 0 2px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid white; transition: transform 0.15s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .slider-ticks { display: flex; justify-content: space-between; margin-top: 6px; }
+  .slider-ticks span { font-size: 10px; color: rgba(255,255,255,0.25); }
+  .slider-ends { display: flex; justify-content: space-between; margin-top: 10px; gap: 8px; }
+  .slider-ends span { font-size: 11px; color: rgba(255,255,255,0.36); line-height: 1.5; max-width: 43%; }
+  .slider-ends span:last-child { text-align: right; }
+  .selected-val { margin-top: 14px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 14px; min-height: 44px; display: flex; align-items: center; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.78); }
+  .selected-val.a { border: 1px solid rgba(125,211,252,0.3); }
+  .selected-val.b { border: 1px solid rgba(249,168,212,0.3); }
+
+  /* Loading dots */
+  .dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); animation: dot 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,80%,100%{transform:scale(0.5);opacity:0.25} 40%{transform:scale(1);opacity:1} }
+
+  /* Error */
+  .err-box { background: rgba(252,165,165,0.07); border: 1px solid rgba(252,165,165,0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; text-align: left; color: #fca5a5; font-size: 12px; line-height: 1.7; word-break: break-all; }
+
+  /* Result */
+  .result-wrap { max-width: 640px; width: 100%; }
+  .summary-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 18px; margin-bottom: 20px; color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.8; }
+  .area-card { border-radius: 16px; padding: 14px; margin-bottom: 10px; animation: pp 0.5s cubic-bezier(.34,1.4,.64,1) both; }
+  @keyframes pp { from{opacity:0;transform:scale(0.87)} to{opacity:1;transform:scale(1)} }
+  .area-card.rank0 { background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.22); }
+  .area-card.rank1 { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+  .area-card.rank2 { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+  .area-card.rank3 { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .area-card.rank4 { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .area-inner { display: flex; gap: 10px; align-items: flex-start; }
+  .area-left { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; width: 116px; }
+  .medal { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; }
+  .radar-legend { display: flex; flex-direction: column; gap: 2px; width: 100%; padding-left: 2px; }
+  .radar-legend-row { display: flex; align-items: center; gap: 3px; }
+  .legend-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; opacity: 0.65; }
+  .legend-label { font-size: 8px; color: rgba(255,255,255,0.28); flex: 1; }
+  .legend-val { font-size: 8px; color: rgba(255,255,255,0.52); font-weight: 700; }
+  .area-right { flex: 1; min-width: 0; }
+  .area-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; flex-wrap: wrap; }
+  .area-pref { color: rgba(255,255,255,0.28); font-size: 10px; }
+  .area-name { color: white; font-weight: 900; font-size: clamp(14px, 4vw, 18px); }
+  .area-catchcopy { font-size: 11px; margin-bottom: 6px; font-style: italic; opacity: 0.82; }
+  .area-desc { color: rgba(255,255,255,0.5); font-size: 12px; line-height: 1.7; margin-bottom: 6px; }
+  .match-box { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.22); border-radius: 7px; padding: 5px 9px; margin-bottom: 7px; color: #a5b4fc; font-size: 11px; }
+  .area-meta { font-size: 11px; color: rgba(255,255,255,0.32); margin-bottom: 6px; }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tag { background: rgba(255,255,255,0.07); border-radius: 20px; padding: 3px 9px; font-size: 11px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+  .result-footer { color: rgba(255,255,255,0.13); font-size: 11px; text-align: center; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- INTRO -->
+  <div id="screen-intro" class="screen active" style="text-align:center">
+    <p style="color:rgba(255,255,255,0.22);font-size:11px;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:12px">Couple's Area Finder</p>
+    <h1>Where Should<br><em>We</em> Live?</h1>
+    <p class="sub">ふたりそれぞれが8問に答えるだけで<br>AIがぴったりの街をTOP5で提案します</p>
+    <div class="partner-badges">
+      <div class="badge-a">パートナーA</div>
+      <div class="badge-b">パートナーB</div>
+    </div>
+    <button class="btn btn-primary btn-center" onclick="startQuiz()">診断スタート ✨</button>
+    <p style="color:rgba(255,255,255,0.16);font-size:11px;margin-top:12px">2人×8問 ・ 所要時間 約2〜3分</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-header">
+      <div id="partner-badge" class="current-badge a">パートナーA が回答中</div>
+      <span id="q-count" class="q-count">1 / 8</span>
+    </div>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill a" style="width:0%"></div></div>
+    <div class="q-card">
+      <div id="q-emoji" class="q-emoji"></div>
+      <div id="q-text" class="q-text"></div>
+      <div class="slider-wrap">
+        <input type="range" id="slider" min="0" max="4" step="1" value="2" oninput="onSlider()">
+        <div class="slider-ticks">
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+        </div>
+        <div class="slider-ends">
+          <span id="label-left"></span>
+          <span id="label-right"></span>
+        </div>
+        <div id="selected-val" class="selected-val a"></div>
+      </div>
+    </div>
+    <button id="next-btn" class="btn btn-center" onclick="goNext()">次へ →</button>
+  </div>
+
+  <!-- TRANSITION -->
+  <div id="screen-transition" class="screen" style="text-align:center">
+    <div style="font-size:48px;margin-bottom:14px">🔄</div>
+    <h2>パートナーAの回答完了！</h2>
+    <p style="color:rgba(255,255,255,0.38);font-size:14px;line-height:1.9;margin-bottom:18px">
+      次は<span style="color:#f9a8d4;font-weight:700">パートナーB</span>が<br>同じ8問に答えてください。
+    </p>
+    <div style="display:inline-block;background:rgba(249,168,212,0.12);border:1px solid rgba(249,168,212,0.3);border-radius:12px;padding:12px 28px;margin-bottom:24px">
+      <p style="color:#f9a8d4;font-weight:700;font-size:14px">📱 スマホを渡してね</p>
+    </div><br>
+    <button class="btn btn-b btn-center" onclick="startB()">パートナーBの回答を始める →</button>
+  </div>
+
+  <!-- LOADING -->
+  <div id="screen-loading" class="screen" style="text-align:center">
+    <div style="font-size:44px;margin-bottom:14px">🗾</div>
+    <h2>AIが分析しています…</h2>
+    <p style="color:rgba(255,255,255,0.32);font-size:13px;margin-top:8px">日本全国470以上のエリアから<br>ふたりに最適な街を探しています</p>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="screen-error" class="screen" style="text-align:center">
+    <div style="font-size:44px;margin-bottom:14px">😓</div>
+    <h2>エラーが発生しました</h2>
+    <div id="err-msg" class="err-box" style="margin-top:12px"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-danger" onclick="retry()">もう一度試す 🔄</button>
+      <button class="btn btn-ghost" onclick="restartAll()">最初からやり直す</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="screen-result" class="screen">
+    <div style="text-align:center;margin-bottom:20px">
+      <p style="color:rgba(255,255,255,0.22);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px">Your Result</p>
+      <h2>ふたりにおすすめのエリア TOP5</h2>
+    </div>
+    <div id="summary-box" class="summary-box"></div>
+    <div id="areas-list"></div>
+    <div style="text-align:center;margin-top:22px">
+      <button class="btn btn-ghost btn-center" onclick="restartAll()">もう一度診断する 🔄</button>
+    </div>
+    <p class="result-footer">※ AIによる参考情報です。実際の物件探しは各自でご確認ください。</p>
+  </div>
+
+</div>
+
+<script>
+// ========================================================
+// ★★★ ここにAPIキーを貼り付けてください ★★★
+const API_KEY = "ここにAPIキーを入力";
+// ========================================================
+
+const QUESTIONS = [
+  { emoji:"💴", text:"家賃・住居費の予算感は？", left:"とにかく安く抑えたい", right:"高くても立地・質優先",
+    leftVal:"家賃7万円以下で極力コストを抑えたい", rightVal:"家賃15万円以上でも立地・質を最優先",
+    midVals:["家賃7〜9万円でコスパ重視","家賃9〜12万円程度","家賃12〜15万円程度"] },
+  { emoji:"👨‍👩‍👧", text:"子どもの予定は？", left:"予定なし・ふたりの生活優先", right:"2〜3人ほしい・教育環境重視",
+    leftVal:"子どもの予定はなく、ふたりの生活を充実させたい", rightVal:"子ども2〜3人を想定。広い家・庭・保育園・学校環境を重視",
+    midVals:["子どもはまだ未定だが将来的には考慮したい","子ども1人を想定、公園・保育園環境があると嬉しい","子ども1〜2人ほしい、子育て環境をある程度重視"] },
+  { emoji:"🌳", text:"自然・緑の近さは？", left:"都市の利便性優先、自然はなくてもOK", right:"山・海・川が近くにないとダメ",
+    leftVal:"自然環境よりも都市の利便性・充実度を優先", rightVal:"海・山・川など豊かな自然が生活圏にあることが必須",
+    midVals:["自然にはあまりこだわらないが公園があると嬉しい","徒歩圏内に公園や川沿いの散歩道がある程度でOK","海か山のどちらかが週末日帰りで行ける距離にほしい"] },
+  { emoji:"☕", text:"街の雰囲気の好みは？", left:"静かで落ち着いた住宅街", right:"にぎやかで飲食・エンタメが豊富",
+    leftVal:"静かで落ち着いた閑静な住宅街を強く希望", rightVal:"飲食店・バー・ライブハウスなどが豊富なにぎやかな繁華街に近い場所",
+    midVals:["どちらかといえば静かだが近くにカフェや飲食店があると嬉しい","おしゃれなカフェやセレクトショップが集まる感度高い街","昔ながらの商店街や下町の人情味がある街が好き"] },
+  { emoji:"🏠", text:"どんな家に住みたい？", left:"駅チカ重視・築年数・広さは問わない", right:"庭つき一戸建て・広さ・環境優先",
+    leftVal:"とにかく駅近であれば築年数や広さは問わない", rightVal:"庭付きの一戸建てや広い物件、環境の良さを最優先",
+    midVals:["築浅・新築マンションで綺麗な環境がいい","古民家やリノベ物件など味のある個性的な住宅も面白い","広さと駅距離のバランスを重視"] },
+  { emoji:"🌆", text:"都市の規模感は？", left:"小さな町・移住先・田舎でもOK", right:"東京・大阪の大都市ど真ん中",
+    leftVal:"小規模な町や移住先、のどかな地方・離島も視野にある", rightVal:"東京・大阪などの大都市中心部の密度と利便性が好き",
+    midVals:["地方の中核都市（福岡・仙台・金沢など）規模がちょうどいい","大都市近郊の少し落ち着いたベッドタウン・郊外エリア","大都市にも地方にも程よくアクセスできる中間的な場所"] },
+  { emoji:"🚶", text:"最寄り駅からの距離は？", left:"駅遠でも広さ・環境を優先", right:"徒歩3分以内・駅直結レベル必須",
+    leftVal:"駅から多少遠くても広い家や豊かな環境を優先したい", rightVal:"最寄り駅まで徒歩3分以内の駅近を強く希望",
+    midVals:["自転車や車で15〜20分程度の距離なら許容できる","徒歩15分以内なら問題ない","徒歩10分以内が理想"] },
+  { emoji:"🎨", text:"休日の街での過ごし方は？", left:"家に籠もるので街の充実度は不要", right:"外食・バー・ライブ・街歩きが週の楽しみ",
+    leftVal:"休日は主に家で過ごすため街の賑わいはあまり関係ない", rightVal:"居酒屋・バー・ライブハウス・個性的なショップなど街の楽しさを最重視",
+    midVals:["週末に気軽に行ける公園や自然スポットがあると嬉しい","個性的なカフェやギャラリー・週末マーケットを楽しみたい","外食やショッピングをほどほどに楽しみたい"] },
+];
+
+const RANK_COLORS = ["#FFD700","#C0C0C0","#CD7F32","#94a3b8","#86efac"];
+const RANK_MEDALS = ["🥇","🥈","🥉","4","5"];
+const RADAR_AXES = ["利便性","自然","コスパ","子育て","文化"];
+
+let state = { partner: "A", current: 0, answersA: [], answersB: [], savedA: [], savedB: [] };
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  el.classList.add('active');
+  // re-trigger animation
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = '';
+}
+
+function sliderToVal(q, v) {
+  if (v === 0) return q.leftVal;
+  if (v === 4) return q.rightVal;
+  return q.midVals[v - 1];
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[state.current];
+  const isA = state.partner === "A";
+  const color = isA ? "#7dd3fc" : "#f9a8d4";
+  const grad = isA ? "linear-gradient(90deg,#0ea5e9,#6366f1)" : "linear-gradient(90deg,#ec4899,#f97316)";
+
+  document.getElementById('partner-badge').textContent = `パートナー${state.partner} が回答中`;
+  document.getElementById('partner-badge').className = `current-badge ${isA?'a':'b'}`;
+  document.getElementById('q-count').textContent = `${state.current+1} / ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width = `${(state.current/QUESTIONS.length)*100}%`;
+  document.getElementById('progress-fill').className = `progress-fill ${isA?'a':'b'}`;
+  document.getElementById('q-emoji').textContent = q.emoji;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('label-left').textContent = q.left;
+  document.getElementById('label-right').textContent = q.right;
+
+  const slider = document.getElementById('slider');
+  slider.value = 2;
+  slider.style.background = `linear-gradient(to right, ${color} 37.5%, rgba(255,255,255,0.12) 37.5%)`;
+  slider.style.setProperty('--thumb-color', color);
+
+  document.getElementById('selected-val').textContent = '✓ ' + sliderToVal(q, 2);
+  document.getElementById('selected-val').className = `selected-val ${isA?'a':'b'}`;
+
+  const nextBtn = document.getElementById('next-btn');
+  const isLast = state.current === QUESTIONS.length - 1;
+  nextBtn.textContent = isLast ? (isA ? '次のパートナーへ 💫' : 'AIに分析してもらう 🔍') : '次へ →';
+  nextBtn.className = `btn btn-center ${isA ? 'btn-primary' : 'btn-b'}`;
+}
+
+function onSlider() {
+  const q = QUESTIONS[state.current];
+  const v = parseInt(document.getElementById('slider').value);
+  const isA = state.partner === "A";
+  const color = isA ? "#7dd3fc" : "#f9a8d4";
+  const pct = v * 25;
+  document.getElementById('slider').style.background =
+    `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.12) ${pct}%)`;
+  document.getElementById('selected-val').textContent = '✓ ' + sliderToVal(q, v);
+}
+
+function startQuiz() {
+  state = { partner:"A", current:0, answersA:[], answersB:[], savedA:[], savedB:[] };
+  renderQuestion();
+  show('quiz');
+}
+
+function goNext() {
+  const v = parseInt(document.getElementById('slider').value);
+  const textVal = sliderToVal(QUESTIONS[state.current], v);
+
+  if (state.partner === "A") {
+    state.answersA.push(textVal);
+    if (state.current < QUESTIONS.length - 1) {
+      state.current++;
+      renderQuestion();
+    } else {
+      show('transition');
+    }
+  } else {
+    state.answersB.push(textVal);
+    if (state.current < QUESTIONS.length - 1) {
+      state.current++;
+      renderQuestion();
+    } else {
+      callAPI();
+    }
+  }
+}
+
+function startB() {
+  state.partner = "B";
+  state.current = 0;
+  renderQuestion();
+  show('quiz');
+}
+
+function buildPrompt() {
+  const fmt = ans => QUESTIONS.map((q,i) => `Q${i+1}「${q.text}」→ ${ans[i]}`).join('\n');
+  return `あなたは日本全国の街・エリアに詳しい住まい探しの専門家です。
+カップル2人のアンケート回答を分析し、最もマッチする居住エリアTOP5を提案してください。
+
+【パートナーAの回答】
+${fmt(state.savedA)}
+
+【パートナーBの回答】
+${fmt(state.savedB)}
+
+条件：
+- エリアは「西日暮里」「蔵前」「学芸大学」「武蔵小山」「白楽」「三島」「逗子」「小田原」「糸島」「薬院」「長岡京」「江古田」「三軒茶屋」「吉祥寺」「鎌倉」「葉山」「塩屋」「尾道」のような駅名・町丁目・地区名レベルで提案する
+- 関東圏多め（東京23区・神奈川・埼玉・千葉）だが回答内容に応じて全国から選ぶ
+- 2人の回答が異なる場合は両者のバランスをとる
+各エリアの5軸スコア（0〜10の整数）：convenience=交通利便性、nature=自然環境、costPerformance=家賃コスパ、childcare=子育て環境、culture=街の個性
+
+JSONのみで返答（前置き・説明・マークダウンは一切なし）:
+{"summary":"2〜3文","areas":[{"rank":1,"name":"エリア名","prefecture":"都道府県","emoji":"絵文字","catchcopy":"15字以内","description":"2文","tags":["タグ1","タグ2","タグ3"],"rent":"例:8〜12万円","access":"例:渋谷まで15分","match_point":"1文","radar":{"convenience":8,"nature":5,"costPerformance":7,"childcare":6,"culture":9}}]}`;
+}
+
+async function callAPI() {
+  state.savedA = [...state.answersA];
+  state.savedB = [...state.answersB];
+  show('loading');
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-5",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: buildPrompt() }],
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const raw = (data.content || []).find(b => b.type === "text")?.text || "";
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error("JSONが見つかりません: " + raw.slice(0, 150));
+    const parsed = JSON.parse(m[0]);
+    if (!parsed.areas) throw new Error("areasが見つかりません");
+    renderResult(parsed);
+    show('result');
+  } catch(e) {
+    document.getElementById('err-msg').textContent = e.message || String(e);
+    show('error');
+  }
+}
+
+function retry() { callAPI(); }
+function restartAll() { startQuiz(); }
+
+// SVGレーダーチャート生成
+function makeRadar(values, color, size) {
+  const N = 5, cx = size/2, cy = size/2, R = size*0.32, Rl = size*0.47;
+  const ang = i => Math.PI*2*i/N - Math.PI/2;
+  const pt = (i, r) => [cx + r*Math.cos(ang(i)), cy + r*Math.sin(ang(i))];
+  const polyStr = r => Array.from({length:N},(_,i)=>pt(i,r).join(',')).join(' ');
+  const dataPts = values.map((v,i) => pt(i, R * Math.min(Math.max(v,0),10)/10));
+  const dataStr = dataPts.map(p=>p.join(',')).join(' ');
+  const axisLines = Array.from({length:N},(_,i)=>{const p=pt(i,R);return`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;}).join('');
+  const grids = [.25,.5,.75,1].map(lv=>`<polygon points="${polyStr(R*lv)}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`).join('');
+  const labels = Array.from({length:N},(_,i)=>{const p=pt(i,Rl);return`<text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="rgba(255,255,255,0.38)" font-family="sans-serif">${RADAR_AXES[i]}</text>`;}).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${grids}${axisLines}<polygon points="${dataStr}" fill="${color}" fill-opacity="0.18" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>${dataPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${color}"/>`).join('')}${labels}</svg>`;
+}
+
+function renderResult(data) {
+  document.getElementById('summary-box').textContent = data.summary || '';
+  const list = document.getElementById('areas-list');
+  list.innerHTML = '';
+  (data.areas || []).forEach((area, i) => {
+    const rc = RANK_COLORS[i] || '#94a3b8';
+    const rv = area.radar ? [area.radar.convenience, area.radar.nature, area.radar.costPerformance, area.radar.childcare, area.radar.culture] : [5,5,5,5,5];
+    const radar = makeRadar(rv, rc, 106);
+    const legend = RADAR_AXES.map((ax,ai)=>`<div class="radar-legend-row"><div class="legend-dot" style="background:${rc}"></div><span class="legend-label">${ax}</span><span class="legend-val">${rv[ai]}</span></div>`).join('');
+    const tags = (area.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+    const card = document.createElement('div');
+    card.className = `area-card rank${i}`;
+    card.style.animationDelay = `${i*0.6}s`;
+    card.innerHTML = `
+      <div class="area-inner">
+        <div class="area-left">
+          <div class="medal" style="background:${rc};color:${i<3?'#07070f':'white'};box-shadow:0 2px 8px ${rc}44">${RANK_MEDALS[i]}</div>
+          ${radar}
+          <div class="radar-legend">${legend}</div>
+        </div>
+        <div class="area-right">
+          <div class="area-name-row">
+            <span style="font-size:20px">${area.emoji||''}</span>
+            <span class="area-pref">${area.prefecture||''}</span>
+            <span class="area-name">${area.name||''}</span>
+          </div>
+          <div class="area-catchcopy" style="color:${rc}">${area.catchcopy||''}</div>
+          <div class="area-desc">${area.description||''}</div>
+          <div class="match-box">💡 ${area.match_point||''}</div>
+          <div class="area-meta">🏠 ${area.rent||''} · 🚃 ${area.access||''}</div>
+          <div class="tags">${tags}</div>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>
